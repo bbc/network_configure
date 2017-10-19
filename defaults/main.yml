@@ -1,0 +1,33 @@
+---
+# name: network-configure/defaults
+# description: ALL our default variables for network-configure go in here
+#------------------------------------------------------------------------------
+# Packages - All our required packages we need installing
+#------------------------------------------------------------------------------
+
+# - pre-requisites -
+network_configure_packages:                                   # Packages required for setting up network and bonding
+    - bridge-utils
+    - ifenslave
+    - vlan
+
+network_configure_kernel_modules:                             # Kernel modules which need enabling
+    - bonding
+    - 8021q
+
+network_configure_restart_service: true                       # Do we restart the force network service
+
+# - default paths -
+# The network interfaces are built up in the network_configure_pre_interface_path, and the force network restart service copies this over the network_configure_combined_interface_path:
+network_configure_interfaces_directory: /etc/network/interfaces.d                                                     # Included file in the interfaces file for extra config
+network_configure_combined_interface_path: "{{ network_configure_interfaces_directory }}/0_combined_interfaces"       # File where we copy our built up interfaces list to
+network_configure_pre_interface_path: /etc/network/pre_combined_interfaces                                            # File where we build up the interfaces before we move to interfaces.d
+network_configure_backup_interface_path: /etc/network/backup_combined_interfaces                                      # File where the interfaces are backed up to with a force network restart
+network_configure_script_location: /opt/cleanup-interfaces.sh                                                         # File where we backup our most recent network interfaces to
+network_configure_remove_interfaces: true                                                                             # If this is true then the interfaces path will be fully blown away rather than simply additive, useful for getting rid of existing con
+
+# - Network configure interfaces -
+network_configure_allowed_device_type: [ eth, bond, bridge ] # This is a list of allowed device types under network_configure_interfaces, if it isn't defined here, it will be ignored.
+
+# This particular dict drives what is configured on the box, see documentation for examples.
+network_configure_interfaces: {}

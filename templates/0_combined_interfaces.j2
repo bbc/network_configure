@@ -1,0 +1,20 @@
+#jinja2: lstrip_blocks: True
+### MANAGED BY {{ role_path|basename }} ANSIBLE ROLE ###
+{# Iterate through list of devices, if any match and eth, bond or bridge device then continue in the loop - dicts are unordered so order this based on network order subkey #}
+{% for device, item in network_configure_interfaces.iteritems()|sort(attribute='1.network_order') if (item.device_type | intersect(network_configure_allowed_device_type) | length > 0) %}
+
+  {# Create the device itself and assign a boot protocol #}
+  auto {{ item.device_name }}
+    iface {{ item.device_name }} inet {{ item.bootproto if item.bootproto is defined else network_configure_bootproto }}
+  {# Loop through all of our values held in the networking key of an interface then add to our interfaces file, checking if they are a list or not #}
+  {% if item.networking is defined %}
+    {% for key, value in item.networking.iteritems()|sort %}
+      {% if value is iterable and value is not string %}
+      {{ key }} {% for list_item in value %}{{ list_item }}{% if not loop.last %} {% endif %}{% endfor %}
+
+      {% elif value is string or value is number %}
+      {{ key }} {{ value }}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+{% endfor %}

@@ -1,0 +1,25 @@
+---
+# module: network-configure/tasks/install
+# description: Install our required packages for network-configure
+
+- name: Install all required packages for network-configure
+  apt:
+    pkg: "{{ network_configure_packages }}"
+    state: latest
+
+- name: Enable -{{ kernel_modules }}- kernel modules
+  modprobe:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{ network_configure_kernel_modules }}"
+
+- name: Enable -{{ kernel_modules }}- kernel module on boot
+  lineinfile:
+    dest: /etc/modules
+    line: "{{ item }}"
+  with_items: "{{ network_configure_kernel_modules }}"
+
+- name: Create force networking service
+  template:
+    src: force-networking.service.j2
+    dest: "/etc/systemd/system/force-networking.service"

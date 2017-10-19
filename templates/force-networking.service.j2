@@ -1,0 +1,21 @@
+[Unit]
+Description=Force restart network
+DefaultDependencies=no
+Wants=network.target
+Conflicts=shutdown.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/default/networking
+# Backup our custom interfaces
+ExecStartPre=/bin/cp -f {{ network_configure_combined_interface_path }} {{ network_configure_backup_interface_path }}
+ExecStartPre=/bin/cp -f {{ network_configure_pre_interface_path }} {{ network_configure_combined_interface_path }}
+ExecStart=/sbin/ifup -a --read-environment
+ExecStop=/sbin/ifdown -a --read-environment --ignore-errors --force --exclude=lo
+# If any interfaces are still up post stop then force them down and flush
+ExecStopPost={{ network_configure_script_location }}
+RemainAfterExit=true
+TimeoutStartSec=2min

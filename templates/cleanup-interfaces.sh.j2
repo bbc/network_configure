@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Check if any remaining interfaces are up and force them down and flush
+flush_interfaces()
+{
+  int_state_path="/sys/class/net/$1/operstate"
+  if [ "$(cat $int_state_path)" == "up" ]
+  then
+    ip link set dev $1 down
+    ip addr flush $1
+  fi
+
+  # Check if the interface is down and has an ip, if so then flush it
+  ip addr show dev $1 | grep -q inet
+  check_ip=$?
+  if [ "$check_ip" == "0" ]
+  then
+    echo "$1 is down and still has an ip - flushing"
+    ip addr flush $1
+  fi
+}
+
+for adapter in /sys/class/net/*
+do
+  eth_device=$(basename $adapter)
+  if [ "$eth_device" != "lo" ]
+  then
+    echo "flushing $eth_device"
+    flush_interfaces $eth_device
+  fi
+done

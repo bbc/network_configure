@@ -1,0 +1,44 @@
+---
+# module: network-configure/tasks/configure
+# description: Configure network-configure
+
+- name: Include the interfaces path within the interfaces file
+  lineinfile:
+    path: /etc/network/interfaces
+    regexp: '^source {{ network_configure_interfaces_directory }}/*'
+    line: 'source {{ network_configure_interfaces_directory }}/*'
+  when: network_configure_remove_interfaces == false
+
+- name: Include the interfaces path within the interfaces file - blow away existing network interface file
+  copy:
+    content: |
+      ### MANAGED BY {{ role_path|basename }} ANSIBLE ROLE ###
+      source {{ network_configure_interfaces_directory }}/*
+      auto lo
+      iface lo inet loopback
+    dest: /etc/network/interfaces
+  when: network_configure_remove_interfaces
+
+- name: Make sure interfaces directory exists
+  file:
+    path: "{{ network_configure_interfaces_directory }}"
+    state: directory
+
+- name: Make sure blank interfaces file exists. To prevent errors with cp inside force network service
+  copy:
+    content: ""
+    dest: "{{ network_configure_combined_interface_path }}"
+    force: no
+
+- name: Create cleanup interfaces script
+  template:
+    src: cleanup-interfaces.sh.j2
+    dest: "{{ network_configure_script_location }}"
+    mode: a+x
+
+- name: Create the combined interfaces file
+  template:
+    src: 0_combined_interfaces.j2
+    dest: "{{ network_configure_pre_interface_path }}"
+  notify:
+    - restart network service

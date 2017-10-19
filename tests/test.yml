@@ -1,0 +1,45 @@
+---
+- hosts: all
+  become: yes
+  gather_facts: false
+  become_method: sudo
+  vars:
+    # Variables if required by role:
+    # Role variables here
+    # example: 'test'
+    network_configure_interfaces:
+      primary:
+        device_name: enp0s3
+        device_type: [ eth ]
+        bootproto: dhcp
+        network_order: 0
+      secondary:
+        device_name: enp0s8
+        device_type: [ eth ]
+        bootproto: static
+        network_order: 0
+        networking:
+          address: 10.10.10.3
+          netmask: 255.255.255.0
+
+  pre_tasks:
+    - name: Install python2.x for Ansible when we are not using python3
+      raw: "test -e /usr/bin/python || apt -y update && apt install -y python-minimal"
+      changed_when: false
+      when:
+        - ansible_python_interpreter is not defined
+    - name: Gather facts
+      setup:
+    - name: Blow away vagrant network config
+      copy:
+        content: |
+          auto lo
+          iface lo inet loopback
+          source /etc/network/interfaces.d/*
+        dest: /etc/network/interfaces
+    - name: Blow away further vagrant network config
+      file:
+        path: /etc/network/interfaces.d/50-cloud-init.cfg
+        state: absent
+  roles:
+    - role: "{{ playbook_dir | dirname | basename }}"

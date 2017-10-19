@@ -1,0 +1,10 @@
+---
+# name: network-configure/handlers
+# description: All our handlers for network-configure go in here
+
+- name: Restart the force networking service
+  service:
+    name: force-networking
+    state: restarted
+  listen: restart network service
+  when: network_configure_restart_service

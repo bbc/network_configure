@@ -1,0 +1,10 @@
+---
+# module: network-configure/tasks
+# description: Install network-configure onto an Ubuntu 16.xx server
+
+- include_tasks: install.yml
+
+- include_tasks: configure.yml
+
+- name: Force our handlers to run, this means networking is always expected to come up at the end of this role run.
+  meta: flush_handlers

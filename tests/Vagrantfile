@@ -1,0 +1,11 @@
+# Test our Ansible role
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/xenial64"
+  config.vm.network "private_network", ip: "10.10.10.3"
+  # Trigger ansible playbook build
+    config.vm.provision "ansible" do |ansible|
+      # Run playbook
+      ansible.playbook = "test.yml"
+    end
+end
